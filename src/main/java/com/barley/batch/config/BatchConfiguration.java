@@ -28,10 +28,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+// cette annotation et responsable de lire cette class comme configuration
 @Configuration
+// cette annotation active le system batch
 @EnableBatchProcessing
 public class BatchConfiguration {
 
+    // logger
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchConfiguration.class);
 
     @Autowired
@@ -40,14 +43,17 @@ public class BatchConfiguration {
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
 
+    // offrer automatiquement (regarde application.properties)
     @Autowired
     private DataSource dataSource;
 
+    // a ce stade la creation de reader qui recupere les ligne depuis la source
     @Bean
     public ItemReader<RecordSO> reader() {
         return new JdbcCursorItemReaderBuilder<RecordSO>().name("the-reader")
                 .sql("select id, firstName, lastname, random_num from reader").dataSource(dataSource)
                 .rowMapper((ResultSet resultSet, int rowNum) -> {
+                    // mapping de chaque result set avec le bean
                     if (!(resultSet.isAfterLast()) && !(resultSet.isBeforeFirst())) {
                         RecordSO recordSO = new RecordSO();
                         recordSO.setFirstName(resultSet.getString("firstName"));
@@ -64,11 +70,14 @@ public class BatchConfiguration {
                 }).build();
     }
 
+    // le processor ()
     @Bean
     public ItemProcessor<RecordSO, WriterSO> processor() {
         return new RecordProcessor();
     }
 
+
+    // le writer 
     @Bean
     public JdbcBatchItemWriter<WriterSO> writer(DataSource dataSource, ItemPreparedStatementSetter<WriterSO> setter) {
         return new JdbcBatchItemWriterBuilder<WriterSO>()
@@ -92,6 +101,7 @@ public class BatchConfiguration {
                 .end().build();
     }
 
+    // si ici que tu integre l'ensemble (Reader , process , writer)
     @Bean
     public Step step1(JdbcBatchItemWriter<WriterSO> writer, ItemReader<RecordSO> reader) {
         return stepBuilderFactory.get("step1").<RecordSO, WriterSO>chunk(5).reader(reader).processor(processor())
