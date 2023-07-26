@@ -1,5 +1,5 @@
 package com.barley.batch.model;
-
+// Object bean pour le record utiliser dans le reader 
 public class RecordSO {
 
     private long id;
