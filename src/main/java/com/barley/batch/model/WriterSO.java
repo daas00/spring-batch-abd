@@ -1,5 +1,5 @@
 package com.barley.batch.model;
-
+// Object bean pour le record utiliser dans le writer 
 public class WriterSO {
 
     private long id;
